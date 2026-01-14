@@ -1,0 +1,49 @@
+module pwm_core #
+(
+    parameter N = 32
+)
+(
+    input  wire              clk,
+    input  wire              rst,      // active low
+    input  wire [N-1:0]      period,
+    input  wire [N-1:0]      duty,
+    output reg               pwm_out
+);
+
+    reg [N-1:0] period_r;
+    reg [N-1:0] duty_r;
+    reg [N-1:0] cnt;
+
+    // Latch period & duty
+    always @(posedge clk or negedge rst)
+    begin
+        if(!rst) begin
+            period_r <= 0;
+            duty_r   <= 0;
+        end else begin
+            period_r <= period;
+            duty_r   <= duty;
+        end
+    end
+
+    // Counter chu?n PWM
+    always @(posedge clk or negedge rst)
+    begin
+        if(!rst)
+            cnt <= 0;
+        else if(cnt >= period_r)
+            cnt <= 0;
+        else
+            cnt <= cnt + 1;
+    end
+
+    // PWM comparator
+    always @(posedge clk or negedge rst)
+    begin
+        if(!rst)
+            pwm_out <= 1'b0;
+        else
+            pwm_out <= (cnt < duty_r);
+    end
+
+endmodule
